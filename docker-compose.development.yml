@@ -1,0 +1,34 @@
+version: "3"
+services:
+  frontend:
+    command: npm run start
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    tty: true
+    stdin_open: true
+    volumes:
+      - ./frontend/src:/usr/src/app/src
+
+
+  api:
+    command: npm run dev
+    volumes:
+    - ./api/src:/usr/src/app/src
+
+  auth:
+    command: npm run dev
+    volumes:
+      - ./auth/src:/usr/src/app/src
+
+  api_db:
+    volumes:
+    - mongodb_api:/data/db
+
+  auth_db:
+    volumes:
+      - mongodb_auth:/data/db
+
+  nginx:
+    volumes:
+      - ./nginx/nginx.conf.dev:/etc/nginx/conf.d/nginx.conf

@@ -1,0 +1,24 @@
+server {
+
+
+    listen 80;
+
+    server_name olkhovik.loc;
+
+    location / {
+        proxy_pass http://frontend:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /api {
+        proxy_pass http://api:3000;
+        rewrite ^/api/(.*) /$1 break;
+    }
+
+    location /auth/api {
+        proxy_pass http://auth:3000;
+        rewrite ^/auth/api/(.*) /$1 break;
+    }
+}

@@ -1,0 +1,84 @@
+version: "3"
+services:
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: frontend-react
+    command: serve -s build -l 3000
+    restart: unless-stopped
+    networks:
+      - olkhovik-network
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    ports:
+    - "80:80"
+    volumes:
+    - ./nginx/nginx.conf.prod:/etc/nginx/conf.d/nginx.conf
+    depends_on:
+      - frontend
+      - auth
+      - api
+    networks:
+      - olkhovik-network
+
+  auth:
+    build: ./auth
+    container_name: auth
+    command: npm run start
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - MONGO_URL=mongodb://auth_db:27017/auth
+      - API_URL=http://api:3000/api
+    depends_on:
+      - auth_db
+    networks:
+      - olkhovik-network
+
+
+  api:
+    build: ./api
+    container_name: api
+    command: npm run start
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - MONGO_URL=mongodb://api_db:27017/api
+      - AUTH_API_URL=http://auth:3000/api
+    depends_on:
+      - api_db
+      - auth
+    networks:
+      - olkhovik-network
+
+
+  auth_db:
+    image: mongo:latest
+    container_name: auth_db
+    volumes:
+    - mongodb_auth:/data/db
+    networks:
+      - olkhovik-network
+
+
+  api_db:
+    image: mongo:latest
+    container_name: db
+    volumes:
+    - mongodb_api:/data/db
+    networks:
+      - olkhovik-network
+
+
+volumes:
+  mongodb_api:
+  mongodb_auth:
+
+networks:
+  olkhovik-network:
+    driver: bridge
+
